@@ -1,0 +1,48 @@
+version: '2'
+services:
+
+  # app
+  app:
+    build:
+      context: ./
+      dockerfile: app.dockerfile
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./aws-credentials:/root/.aws/credentials
+    depends_on:
+      - database
+      - redis
+
+  # web server
+  web:
+    build:
+      context: ./
+      dockerfile: web.dockerfile
+    working_dir: /var/www
+    volumes_from:
+      - app
+    ports:
+      - 8000:80
+
+  # database
+  database:
+    image: mysql/mysql-server:5.7
+    volumes:
+      - dbdata:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=simple-password
+      - MYSQL_USER=spuser
+      - MYSQL_PASSWORD=secret
+    ports:
+      - 3310:3306
+
+  # redis
+  redis:
+    image: redis:3.2.12
+    volumes:
+      - redis-data:/data
+
+volumes:
+  dbdata:
+  redis-data:
